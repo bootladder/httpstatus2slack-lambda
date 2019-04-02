@@ -14,7 +14,7 @@ var urls []string
 
 func MyLambda() {
 
-	var statusMsg string = ""
+	var statusMsg string = "Slack HTTP Monitor Lambda Golang\n"
 	for _, url := range urls {
 		statusMsg += GetHttpStatusMessage(url)
 	}
@@ -23,6 +23,7 @@ func MyLambda() {
 
 func GetHttpStatusMessage(url string) string {
 
+	fmt.Println("getting url ", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Sprint(url, "  ::  ", err, "\n")
@@ -69,8 +70,8 @@ func main() {
 	ReadEnvironmentIntoGlobalVariables()
 	fmt.Println(token, channel, urls)
 
-	lambda.Start(MyLambda)
-
 	//SlackMessage("hello?", token, channel)
 	//MyLambda()
+
+	lambda.Start(MyLambda)
 }
