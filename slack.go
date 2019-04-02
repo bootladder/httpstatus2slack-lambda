@@ -12,15 +12,13 @@ import (
 var token, channel string
 var urls []string
 
-func MyLambda() (string, error) {
+func MyLambda() {
 
 	var statusMsg string = ""
 	for _, url := range urls {
 		statusMsg += GetHttpStatusMessage(url)
 	}
 	SlackMessage(statusMsg, token, channel)
-
-	return fmt.Sprintf("Hello!"), nil
 }
 
 func GetHttpStatusMessage(url string) string {
