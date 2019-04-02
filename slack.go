@@ -5,14 +5,20 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/bluele/slack"
 	"net/http"
+	"os"
+	"strings"
 )
 
-func HandleRequest() (string, error) {
+var token, channel string
+var urls []string
 
-	var statusMsg string
-	statusMsg = GetHttpStatusMessage("https://domain.com")
-	statusMsg += GetHttpStatusMessage("http://domain.com")
-	SlackMessage(statusMsg)
+func MyLambda() (string, error) {
+
+	var statusMsg string = ""
+	for _, url := range urls {
+		statusMsg += GetHttpStatusMessage(url)
+	}
+	SlackMessage(statusMsg, token, channel)
 
 	return fmt.Sprintf("Hello!"), nil
 }
@@ -36,12 +42,37 @@ func SlackMessage(msg, token, channel string) {
 	}
 }
 
-func main() {
+func ReadEnvironmentIntoGlobalVariables() {
 
-	lambda.Start(HandleRequest)
+	token = os.Getenv("slacktoken")
+	channel = os.Getenv("slackchannel")
+	urlenv := os.Getenv("urls")
+
+	if token == "" {
+		panic("Need a slack token")
+	}
+
+	if channel == "" {
+		fmt.Println("No Channel, defaulting to #general")
+		channel = "#general"
+	}
+	if channel[0] != '#' {
+		channel = "#" + channel
+	}
+
+	if urlenv == "" {
+		panic("Need atleast 1 url to check status")
+	}
+	urls = strings.Split(urlenv, " ")
 }
 
-func main3() {
+func main() {
 
-	HandleRequest()
+	ReadEnvironmentIntoGlobalVariables()
+	fmt.Println(token, channel, urls)
+
+	lambda.Start(MyLambda)
+
+	//SlackMessage("hello?", token, channel)
+	//MyLambda()
 }
