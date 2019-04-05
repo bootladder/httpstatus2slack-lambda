@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var token, channel string
@@ -14,22 +15,65 @@ var urls []string
 
 func MyLambda() {
 
-	var statusMsg string = "Slack HTTP Monitor Lambda Golang\n"
-	for _, url := range urls {
-		statusMsg += GetHttpStatusMessage(url)
+	if time_for_daily_status() {
+		fmt.Println("Time for daily status!")
+
+		var statusMsg string = "Slack HTTP Monitor Lambda Golang\n"
+		for _, url := range urls {
+			msg, _ := GetHttpStatusMessage(url)
+			statusMsg += msg
+		}
+		SlackMessage(statusMsg, token, channel)
+
+	} else { //check for errors only
+		var isAnyWebsiteDown bool
+		var statusMsg string = "Slack HTTP Monitor Lambda Golang\n"
+		for _, url := range urls {
+			msg, err := GetHttpStatusMessage(url)
+			if err != nil {
+				statusMsg += msg
+				isAnyWebsiteDown = true
+			}
+		}
+
+		if isAnyWebsiteDown {
+			fmt.Println("A site was down!  Sending slack message")
+			SlackMessage(statusMsg, token, channel)
+		} else {
+			fmt.Println("All good!")
+		}
+
 	}
-	SlackMessage(statusMsg, token, channel)
 }
 
-func GetHttpStatusMessage(url string) string {
+func time_for_daily_status() bool {
+
+	currentTime := time.Now()
+	timeString := fmt.Sprint("Short Hour Minute Second: ",
+		currentTime.Format("3:4:5"))
+	fmt.Println("The time is: ", timeString)
+
+	timeSetpoint := "10:39"
+	if strings.HasPrefix(timeString, timeSetpoint) {
+
+		return true
+	}
+	return false
+
+}
+
+func GetHttpStatusMessage(url string) (string, error) {
 
 	fmt.Println("getting url ", url)
 	resp, err := http.Get(url)
+	var message string
 	if err != nil {
-		return fmt.Sprint(url, "  ::  ", err, "\n")
+		message = fmt.Sprint(url, "  ::  ", err, "\n")
 	} else {
-		return fmt.Sprint(url, " : ", resp.StatusCode, "\n")
+		message = fmt.Sprint(url, " : ", resp.StatusCode, "\n")
 	}
+
+	return message, err
 }
 
 func SlackMessage(msg, token, channel string) {
