@@ -10,11 +10,12 @@ import (
 	"time"
 )
 
-var token, channel string
-var urls []string
+var token, channel string //Slack API token and channel to post to
+var urls []string         //URLs to check status of
 
 func MyLambda() {
 
+	//Once a day, check all the URLs and report status
 	if time_for_daily_status() {
 		fmt.Println("Time for daily status!")
 
@@ -25,7 +26,7 @@ func MyLambda() {
 		}
 		SlackMessage(statusMsg, token, channel)
 
-	} else { //check for errors only
+	} else { //All other times, only send message if a site is down
 		var isAnyWebsiteDown bool
 		var statusMsg string = "Slack HTTP Monitor Lambda Golang\n"
 		for _, url := range urls {
@@ -114,6 +115,7 @@ func main() {
 	ReadEnvironmentIntoGlobalVariables()
 	fmt.Println(token, channel, urls)
 
+	////For testing
 	//SlackMessage("hello?", token, channel)
 	//MyLambda()
 
