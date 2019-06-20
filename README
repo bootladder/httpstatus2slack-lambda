@@ -2,3 +2,6 @@ Get a Slack message if any sites are down.
 Uses environment variables for a list of URLS, slack token, slack channel.
 
 URLs are a space separated list.
+  
+# Usage
+run `build-and-zip.sh` to get a zip file, then shoot it up to Lambda
